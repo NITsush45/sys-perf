@@ -1,0 +1,36 @@
+dist: xenial
+
+language: python
+python:
+  - "3.6"
+
+before_install:
+  - git clone --recursive https://github.com/dmlc/tvm
+  - cd tvm
+  - sudo apt-get update
+
+  # tvm dependencies
+  - sudo apt-get install -y python python-dev python-setuptools gcc libtinfo-dev zlib1g-dev
+
+  # java
+  - sudo apt-get install -y openjdk-8-jdk
+  - test -d "/usr/lib/jvm/java-8-openjdk-amd64/jre"
+  - export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
+
+  # antlr
+  - cd /usr/local/lib
+  - sudo wget https://www.antlr.org/download/antlr-4.7.1-complete.jar
+  - cd -
+
+install:
+  - mkdir build
+  - cp cmake/config.cmake build
+  - cd build
+  - echo set\(USE_LLVM ON\) >> config.cmake
+  - echo set\(USE_ANTLR ON\) >> config.cmake
+  - cmake ..
+  - fmt="run { date = '$(date)', user = '$who', test = '$test', host = '$(hostname)', times = { user = %U, system = %S, elapsed = %e } }"
+  - /usr/bin/time -f "$fmt" -o build_time make -j3
+  - cat build_time
+
+script: true
